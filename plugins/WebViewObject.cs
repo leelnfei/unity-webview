@@ -55,6 +55,7 @@ public class WebViewObject : MonoBehaviour
     Callback onLoaded;
     bool visibility;
     bool alertDialogEnabled = true;
+    bool scrollBounceEnabled = true;
     int mMarginLeft;
     int mMarginTop;
     int mMarginRight;
@@ -164,6 +165,9 @@ public class WebViewObject : MonoBehaviour
     private static extern void _CWebViewPlugin_SetVisibility(
         IntPtr instance, bool visibility);
     [DllImport("WebViewSeparated")]
+    private static extern bool _CWebViewPlugin_SetURLPattern(
+        IntPtr instance, string allowPattern, string denyPattern);
+    [DllImport("WebViewSeparated")]
     private static extern void _CWebViewPlugin_LoadURL(
         IntPtr instance, string url);
     [DllImport("WebViewSeparated")]
@@ -226,6 +230,9 @@ public class WebViewObject : MonoBehaviour
     [DllImport("WebView")]
     private static extern void _CWebViewPlugin_SetVisibility(
         IntPtr instance, bool visibility);
+    [DllImport("WebView")]
+    private static extern bool _CWebViewPlugin_SetURLPattern(
+        IntPtr instance, string allowPattern, string denyPattern);
     [DllImport("WebView")]
     private static extern void _CWebViewPlugin_LoadURL(
         IntPtr instance, string url);
@@ -290,6 +297,12 @@ public class WebViewObject : MonoBehaviour
     [DllImport("__Internal")]
     private static extern void _CWebViewPlugin_SetAlertDialogEnabled(
         IntPtr instance, bool enabled);
+    [DllImport("__Internal")]
+    private static extern void _CWebViewPlugin_SetScrollBounceEnabled(
+        IntPtr instance, bool enabled);
+    [DllImport("__Internal")]
+    private static extern bool _CWebViewPlugin_SetURLPattern(
+        IntPtr instance, string allowPattern, string denyPattern);
     [DllImport("__Internal")]
     private static extern void _CWebViewPlugin_LoadURL(
         IntPtr instance, string url);
@@ -571,6 +584,44 @@ public class WebViewObject : MonoBehaviour
     public bool GetAlertDialogEnabled()
     {
         return alertDialogEnabled;
+    }
+
+    public void SetScrollBounceEnabled(bool e)
+    {
+#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+        // TODO: UNSUPPORTED
+#elif UNITY_IPHONE
+        if (webView == IntPtr.Zero)
+            return;
+        _CWebViewPlugin_SetScrollBounceEnabled(webView, e);
+#elif UNITY_ANDROID
+        // TODO: UNSUPPORTED
+#else
+        // TODO: UNSUPPORTED
+#endif
+        scrollBounceEnabled = e;
+    }
+
+    public bool GetScrollBounceEnabled()
+    {
+        return scrollBounceEnabled;
+    }
+
+    public bool SetURLPattern(string allowPattern, string denyPattern)
+    {
+#if UNITY_WEBPLAYER || UNITY_WEBGL
+        //TODO: UNSUPPORTED
+#elif UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX
+        //TODO: UNSUPPORTED
+#elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_IPHONE
+        if (webView == IntPtr.Zero)
+            return false;
+        return _CWebViewPlugin_SetURLPattern(webView, allowPattern, denyPattern);
+#elif UNITY_ANDROID
+        if (webView == null)
+            return false;
+        return webView.Call<bool>("SetURLPattern", allowPattern, denyPattern);
+#endif
     }
 
     public void LoadURL(string url)
